@@ -14,7 +14,14 @@ import numpy as np
 
 from models import ShortRateModel
 
-from ._bond_utils import bond_cashflows, price_bond, price_bond_from_curve
+from ._bond_utils import (
+    DEFAULT_FREQ,
+    bond_cashflows,
+    bond_field,
+    price_bond,
+    price_bond_from_curve,
+    price_bond_parallel_shift,
+)
 
 #: One basis point.
 ONE_BP: float = 1.0e-4
@@ -33,12 +40,15 @@ class DV01Engine:
         r0: float,
         bond: Mapping,
     ) -> float:
-        """Dollar value of a 1bp parallel shift in the short rate.
+        """Dollar value of a 1bp parallel shift of the zero curve.
 
-        The bond is repriced at ``r0 - 0.5bp`` and ``r0 + 0.5bp`` and the
-        central difference gives the price change for a full ``+1bp`` move.
-        The sign convention returns a positive number when an upward rate move
-        produces a loss (the usual case for a long bond position).
+        A parallel ``+1bp`` shift is applied to the model-implied periodic zero
+        curve and the bond is repriced via a central difference at
+        ``+/- 0.5bp``. Working in periodic-zero space (rather than shifting the
+        short rate ``r0`` directly) makes the DV01 consistent with the bond's
+        modified duration: ``DV01 ≈ modified_duration * price * 1bp``. The sign
+        convention returns a positive number when an upward rate move produces a
+        loss (the usual case for a long bond position).
 
         Parameters
         ----------
@@ -52,12 +62,13 @@ class DV01Engine:
         Returns
         -------
         float
-            DV01: the loss (positive) for a ``+1bp`` parallel rate increase.
+            DV01: the loss (positive) for a ``+1bp`` parallel curve increase.
         """
+        freq = int(bond_field(bond, "freq", DEFAULT_FREQ))
         half = 0.5 * ONE_BP
-        p_up = price_bond(model, r0 + half, bond)
-        p_dn = price_bond(model, r0 - half, bond)
-        # price change for +1bp = P(r0 + 0.5bp) - P(r0 - 0.5bp); loss => negate.
+        p_up = price_bond_parallel_shift(model, r0, bond, half, freq)
+        p_dn = price_bond_parallel_shift(model, r0, bond, -half, freq)
+        # price change for +1bp = P(+0.5bp) - P(-0.5bp); loss => negate.
         return float(-(p_up - p_dn))
 
     def key_rate_durations(

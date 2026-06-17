@@ -16,7 +16,12 @@ import numpy as np
 from models import ShortRateModel
 from pricing import CouponBondPricer
 
-from ._bond_utils import bond_field, price_bond
+from ._bond_utils import (
+    DEFAULT_FREQ,
+    bond_field,
+    price_bond,
+    price_bond_parallel_shift,
+)
 
 #: Numerical guard.
 EPS: float = 1.0e-14
@@ -123,17 +128,20 @@ class PnLAttribution:
         dr: float,
         dt: float,
     ) -> float:
-        """Reprice the bond at shifted rate ``r0 + dr`` after ``dt`` years.
+        """Reprice the bond under a parallel curve shift ``dr`` after ``dt``.
 
-        Advancing the valuation date by ``dt`` is approximated by shortening the
-        bond maturity by ``dt`` (cashflows that have rolled off are dropped from
-        the schedule). This is a roll-down approximation suitable for small
-        ``dt``; ``dt = 0`` recovers an exact parallel-shift reprice.
+        The rate move is applied as a parallel ``dr`` shift of the periodic zero
+        curve, consistent with the modified-duration / convexity sensitivities
+        used in the decomposition. Advancing the valuation date by ``dt`` is
+        approximated by shortening the bond maturity by ``dt`` (cashflows that
+        have rolled off are dropped). ``dt = 0`` recovers an exact
+        parallel-shift reprice.
         """
+        freq = int(bond_field(bond, "freq", DEFAULT_FREQ))
         if dt <= 0.0:
-            return price_bond(model, r0 + dr, bond)
+            return price_bond_parallel_shift(model, r0, bond, dr, freq)
 
         new_bond = dict(bond)
         new_mat = max(float(bond_field(bond, "maturity", 1.0)) - dt, EPS)
         new_bond["maturity"] = new_mat
-        return price_bond(model, r0 + dr, new_bond)
+        return price_bond_parallel_shift(model, r0, new_bond, dr, freq)

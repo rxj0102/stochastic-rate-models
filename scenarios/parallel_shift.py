@@ -93,23 +93,40 @@ class ParallelShiftScenario:
         bond: Mapping[str, Any],
         maturities: Optional[np.ndarray] = None,
     ) -> dict:
-        """Validate model DV01 against a 1bp curve-repricing P&L.
+        """Validate DV01 against a 1bp curve-repricing P&L.
 
-        A +1bp parallel shift should produce a P&L close to ``-DV01``. Returns
-        the two quantities, their absolute and relative differences.
+        A +1bp parallel curve shift should produce a P&L close to ``-DV01``.
+        Two reference DV01s are reported:
+
+        * ``dv01`` -- the model pricer's DV01 (``mod_dur * P * 1bp``), which
+          uses the *flat yield-to-maturity* modified duration. For a sloped
+          curve this differs from the zero-curve response by a small (typically
+          ~2%) convention gap.
+        * ``curve_dv01`` -- the DV01 implied directly by repricing off the zero
+          curve, i.e. ``-(P(+1bp) - P(-1bp)) / 2``. This is the apples-to-apples
+          reference for the curve P&L and matches it to numerical precision.
 
         Returns
         -------
         dict
-            Keys ``dv01``, ``repricing_pnl_1bp``, ``neg_dv01``, ``abs_error``,
-            ``rel_error`` and ``base_price``.
+            ``base_price``, ``repricing_pnl_1bp``, ``dv01``, ``neg_dv01``,
+            ``abs_error``, ``rel_error`` (vs model DV01) and ``curve_dv01``,
+            ``rel_error_curve`` (vs the zero-curve DV01).
         """
         mats, base_yields = base_curve(model, r0, maturities)
         base_price = price_bond_off_curve(mats, base_yields, bond, self._method)
 
-        shifted = base_yields + ONE_BP
-        price_up = price_bond_off_curve(mats, shifted, bond, self._method)
+        price_up = price_bond_off_curve(mats, base_yields + ONE_BP, bond, self._method)
+        price_dn = price_bond_off_curve(mats, base_yields - ONE_BP, bond, self._method)
         pnl_1bp = price_up - base_price
+
+        # Curve-implied DV01 (central difference): the convexity-neutral,
+        # zero-curve-consistent reference for the +1bp P&L.
+        curve_dv01 = -(price_up - price_dn) / 2.0
+        neg_curve = -curve_dv01
+        rel_err_curve = (
+            abs(pnl_1bp - neg_curve) / abs(neg_curve) if neg_curve else np.nan
+        )
 
         dv01 = self._dv01(model, r0, bond)
         neg_dv01 = -dv01
@@ -122,6 +139,8 @@ class ParallelShiftScenario:
             "repricing_pnl_1bp": pnl_1bp,
             "abs_error": abs_err,
             "rel_error": rel_err,
+            "curve_dv01": curve_dv01,
+            "rel_error_curve": rel_err_curve,
         }
 
     # --------------------------------------------------------- model risk

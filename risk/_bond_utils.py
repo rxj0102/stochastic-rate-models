@@ -82,6 +82,49 @@ def price_bond(model: ShortRateModel, r0: float, bond: Mapping) -> float:
     return float(_COUPON.price(model, r0, coupon_rate, maturity, freq, face).price)
 
 
+def price_bond_parallel_shift(
+    model: ShortRateModel,
+    r0: float,
+    bond: Mapping,
+    db: float,
+    freq: int = DEFAULT_FREQ,
+) -> float:
+    """Reprice a bond under a parallel ``db`` shift of the periodic zero curve.
+
+    The model discount factor for each cashflow is converted to its
+    periodic-compounded zero rate, shifted in parallel by ``db``, and converted
+    back to a discount factor. This makes the resulting sensitivity consistent
+    with the bond's modified duration (which is defined against a flat parallel
+    yield move in the same compounding convention).
+
+    Parameters
+    ----------
+    model : ShortRateModel
+        Discounting model.
+    r0 : float
+        Base short rate.
+    bond : Mapping
+        Bond specification.
+    db : float
+        Parallel shift in (periodic-compounded) zero rates.
+    freq : int, optional
+        Compounding frequency used for the zero-rate conversion. Default 2.
+
+    Returns
+    -------
+    float
+        Present value of the bond under the shifted curve.
+    """
+    times, cfs = bond_cashflows(bond)
+    dfs = np.array([model.zcb_price(r0, float(T)) for T in times])
+    dfs = np.clip(dfs, MIN_TIME, None)
+    # df = (1 + z/freq)^(-freq * T)  =>  z = freq * (df^(-1/(freq T)) - 1).
+    z = freq * (dfs ** (-1.0 / (freq * times)) - 1.0)
+    z_bumped = z + db
+    dfs_bumped = (1.0 + z_bumped / freq) ** (-freq * times)
+    return float(np.sum(cfs * dfs_bumped))
+
+
 def price_bond_from_curve(
     times_curve: np.ndarray,
     zero_rates: np.ndarray,

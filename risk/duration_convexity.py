@@ -20,7 +20,12 @@ import numpy as np
 
 from models import ShortRateModel
 
-from ._bond_utils import price_bond
+from ._bond_utils import (
+    DEFAULT_FREQ as _DEFAULT_FREQ,
+    bond_field,
+    price_bond,
+    price_bond_parallel_shift,
+)
 
 #: Default coupon frequency (semi-annual).
 DEFAULT_FREQ: int = 2
@@ -133,14 +138,19 @@ class RateSensitivity:
         bond: Mapping,
         dr: float = 1.0e-4,
     ) -> float:
-        """Effective (empirical) duration via repricing under shifts of ``r0``.
+        """Effective (empirical) duration via repricing under curve shifts.
 
-        The bond is repriced at ``r0 - dr`` and ``r0 + dr`` and the central
-        difference is normalised by the base price
+        A parallel ``+/- dr`` shift is applied to the model-implied periodic
+        zero curve and the bond is repriced; the central difference is
+        normalised by the base price
 
         .. math::
 
-            D_{eff} = \\frac{P(r_0 - dr) - P(r_0 + dr)}{2\\, dr\\, P(r_0)}.
+            D_{eff} = \\frac{P(-dr) - P(+dr)}{2\\, dr\\, P(r_0)}.
+
+        Shifting the zero curve in parallel (rather than the short rate ``r0``)
+        makes the effective duration consistent with the analytic modified
+        duration of the bond.
 
         Parameters
         ----------
@@ -151,15 +161,16 @@ class RateSensitivity:
         bond : Mapping
             Bond specification (see :mod:`risk._bond_utils`).
         dr : float, optional
-            Parallel shift applied to ``r0``. Default 1e-4.
+            Parallel shift applied to the zero curve. Default 1e-4.
 
         Returns
         -------
         float
             The effective duration of the bond.
         """
-        p_up = price_bond(model, r0 + dr, bond)
-        p_dn = price_bond(model, r0 - dr, bond)
+        freq = int(bond_field(bond, "freq", _DEFAULT_FREQ))
+        p_up = price_bond_parallel_shift(model, r0, bond, dr, freq)
+        p_dn = price_bond_parallel_shift(model, r0, bond, -dr, freq)
         p_0 = price_bond(model, r0, bond)
         if abs(p_0) < EPS or dr <= 0.0:
             return 0.0
