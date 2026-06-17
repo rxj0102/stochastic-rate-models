@@ -168,7 +168,6 @@ class G2PlusPlusModel(ShortRateModel):
         return yields
 
     # -------------------------------------------------------- simulation
-    @_timed_simulation
     def simulate_factors(
         self,
         x0: float,
@@ -234,8 +233,11 @@ class G2PlusPlusModel(ShortRateModel):
         seed: Optional[int] = None,
     ) -> SimResult:
         """Simulate the short rate (factors started at zero)."""
+        import time as _time
+
+        start = _time.perf_counter()
         r, x, y, t_grid = self.simulate_factors(0.0, 0.0, T, n_paths, n_steps, seed)
-        return SimResult(paths=r, t_grid=t_grid)
+        return SimResult(paths=r, t_grid=t_grid, elapsed_seconds=_time.perf_counter() - start)
 
     # ---------------------------------------------------------- swaptions
     def swaption_price(
