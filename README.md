@@ -1,5 +1,7 @@
 # stochastic-rate-models
 
+[![CI](https://github.com/rxj0102/stochastic-rate-models/actions/workflows/ci.yml/badge.svg)](https://github.com/rxj0102/stochastic-rate-models/actions/workflows/ci.yml)
+
 **An institutional-grade stochastic interest rate modeling engine.**
 
 `stochastic-rate-models` implements the workhorse one- and two-factor short
