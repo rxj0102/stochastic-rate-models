@@ -179,6 +179,33 @@ and risk-metric relationships (key-rate ↔ duration, VaR monotonicity).
 
 ---
 
+## Reproducibility
+
+### Data availability
+
+No external data is downloaded. Inputs are generated or parameterised inside the code.
+
+### Computational requirements
+
+- Python 3.12.3. Every dependency version is pinned in `requirements.lock` (compiled from `requirements.txt` with uv).
+- Checked on Linux x86_64 with 2 CPU cores and 8 GB RAM. No GPU is needed.
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.lock   # exact pinned environment
+pip install -e . --no-deps         # this package
+pytest -q                          # runs the test suite
+```
+
+### Runtime
+
+The test suite (33 tests) finishes in about 2 minutes on the machine above, including any data downloads it triggers.
+
+### Citation
+
+Citation metadata is in `CITATION.cff`. GitHub turns it into a Cite this repository button on the repo page.
+
+
 ## References
 
 - Vasicek, O. (1977). *An equilibrium characterization of the term structure.* JFE 5(2).
