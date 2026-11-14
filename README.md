@@ -5,8 +5,8 @@
 **An institutional-grade stochastic interest rate modeling engine.**
 
 `stochastic-rate-models` implements the workhorse one- and two-factor short
-rate models of fixed income — **Vasicek (1977)**, **Cox–Ingersoll–Ross (1985)**,
-**Hull–White (1990)** and **G2++** — together with everything needed to put them
+rate models of fixed income: **Vasicek (1977)**, **Cox–Ingersoll–Ross (1985)**,
+**Hull–White (1990)** and **G2++**: together with everything needed to put them
 to work: exact and Monte Carlo simulation, analytical and simulated bond
 pricing, full yield-curve construction, model calibration to market and
 historical data, interest-rate derivatives, duration/convexity/VaR risk, and
@@ -26,8 +26,8 @@ r(t)  = x(t) + y(t) + φ(t)                            # G2++  (two correlated f
 
 | Area | Highlights |
 |------|-----------|
-| **Models** | Vasicek, CIR, Hull–White (curve-fitted), G2++ — affine ZCB formulas, analytical yields & forwards |
-| **Simulation** | Euler–Maruyama, Milstein, **exact** Gaussian (Vasicek) and **exact** non-central χ² (CIR) transitions — fully vectorized, zero path loops |
+| **Models** | Vasicek, CIR, Hull–White (curve-fitted), G2++, affine ZCB formulas, analytical yields & forwards |
+| **Simulation** | Euler–Maruyama, Milstein, **exact** Gaussian (Vasicek) and **exact** non-central χ² (CIR) transitions, fully vectorized, zero path loops |
 | **Term structure** | Yield-curve builder, forward curves, Nelson–Siegel & Svensson fitting, bootstrapping, cubic/monotone interpolation |
 | **Pricing** | Analytical + MC ZCB, coupon bonds (YTM/duration/convexity), bond options (Jamshidian), caps/floors, swaptions, portfolios |
 | **Calibration** | MLE, OLS (AR(1)/Pearson–Sun), Hull–White to cap prices, Kalman filter for the latent short rate |
@@ -119,14 +119,14 @@ streamlit run app.py
 
 Eight tabs:
 
-1. **Rate Path Simulator** — fan charts, terminal distributions, path statistics
-2. **Yield Curve Builder** — model vs market curves, forwards, curve-shape detection
-3. **Bond Pricing** — price/YTM/duration/convexity/DV01, MC-vs-analytical convergence
-4. **Model Calibration** — MLE / OLS / Kalman fits with residual diagnostics
-5. **Derivatives Pricing** — bond options, caps/floors, swaptions, payoff diagrams
-6. **Risk Dashboard** — portfolio DV01, key-rate durations, VaR/CVaR
-7. **Scenario Analysis** — parallel/twist/historical/custom curve shocks
-8. **Model Documentation** — SDEs, formulas, Feller condition, half-life explorers
+1. **Rate Path Simulator**: fan charts, terminal distributions, path statistics
+2. **Yield Curve Builder**: model vs market curves, forwards, curve-shape detection
+3. **Bond Pricing**: price/YTM/duration/convexity/DV01, MC-vs-analytical convergence
+4. **Model Calibration**: MLE / OLS / Kalman fits with residual diagnostics
+5. **Derivatives Pricing**: bond options, caps/floors, swaptions, payoff diagrams
+6. **Risk Dashboard**: portfolio DV01, key-rate durations, VaR/CVaR
+7. **Scenario Analysis**: parallel/twist/historical/custom curve shocks
+8. **Model Documentation**: SDEs, formulas, Feller condition, half-life explorers
 
 ---
 
@@ -167,7 +167,7 @@ and risk-metric relationships (key-rate ↔ duration, VaR monotonicity).
 
 - **Vasicek** is Gaussian with closed-form transition `r(t)|r(s) ~ N(μ, v²)`,
   affine term structure `P(t,T)=A(t,T)e^{−B(t,T)r}`, and analytical bond options
-  (Jamshidian, 1989). Rates can go negative — a known limitation.
+  (Jamshidian, 1989). Rates can go negative: a known limitation.
 - **CIR** uses a square-root diffusion guaranteeing non-negativity; under the
   Feller condition `2κθ > σ²` it stays strictly positive. The exact transition
   is a scaled non-central χ², enabling unbiased simulation.
@@ -212,13 +212,13 @@ Citation metadata is in `CITATION.cff`. GitHub turns it into a Cite this reposit
 - Cox, J., Ingersoll, J., Ross, S. (1985). *A theory of the term structure of interest rates.* Econometrica 53(2).
 - Hull, J., White, A. (1990). *Pricing interest-rate-derivative securities.* RFS 3(4).
 - Jamshidian, F. (1989). *An exact bond option formula.* Journal of Finance 44(1).
-- Brigo, D., Mercurio, F. (2006). *Interest Rate Models — Theory and Practice* (2nd ed.). Springer.
+- Brigo, D., Mercurio, F. (2006). *Interest Rate Models: Theory and Practice* (2nd ed.). Springer.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT: see [LICENSE](LICENSE).
 
 > **Disclaimer.** This library is for research and educational purposes. It is
 > not investment advice and carries no warranty of fitness for trading.
